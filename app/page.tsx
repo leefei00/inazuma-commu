@@ -102,7 +102,7 @@ export default function Home() {
             attendanceBack: {
               matchesPlayed: p.matches_played ?? 0,
               eventsJoined: p.events_joined ?? 0,
-              weeklyPractice: p.weekly_practice ?? "1 ครั้ง / สัปดาห์",
+              weeklyPractice: p.weekly_practice ?? "1",
               bonusPointsAdded: p.bonus_points ?? "+0 แต้ม",
             },
           }));
@@ -237,7 +237,52 @@ export default function Home() {
     return matchesSchool && matchesSearch;
   });
 
-  const renderRadarPolygon = (stats: CharacterStats) => {
+  const getSchoolTheme = (schoolKey: string) => {
+    switch (schoolKey) {
+      case "Zakkaze":
+        return {
+          bg: "bg-[#E0F2FE]",
+          headerBg: "bg-[#0284C7]",
+          border: "border-[#7DD3FC]",
+          accent: "text-[#0284C7]",
+          radarColor: "#0284C7"
+        };
+      case "Sanrin":
+        return {
+          bg: "bg-[#DCFCE7]",
+          headerBg: "bg-[#16A34A]",
+          border: "border-[#86EFAC]",
+          accent: "text-[#16A34A]",
+          radarColor: "#16A34A"
+        };
+      case "Katsuen":
+        return {
+          bg: "bg-[#FDECEC]",
+          headerBg: "bg-[#9E0B0F]",
+          border: "border-[#D4A3A3]",
+          accent: "text-[#9E0B0F]",
+          radarColor: "#8B0000"
+        };
+      case "Gokuyou":
+        return {
+          bg: "bg-[#F1F5F9]",
+          headerBg: "bg-[#0F172A]",
+          border: "border-[#CBD5E1]",
+          accent: "text-[#0F172A]",
+          radarColor: "#0F172A"
+        };
+      default:
+        return {
+          bg: "bg-[#FDECEC]",
+          headerBg: "bg-[#9E0B0F]",
+          border: "border-[#D4A3A3]",
+          accent: "text-[#9E0B0F]",
+          radarColor: "#8B0000"
+        };
+    }
+  };
+
+  const renderRadarPolygon = (stats: CharacterStats, radarColor: string) => {
     const minVal = 0;
     const maxVal = 25;
     const size = 110;
@@ -269,7 +314,7 @@ export default function Home() {
               key={idx} 
               points={polyPoints} 
               fill="none" 
-              stroke="#D4A3A3" 
+              stroke="#94A3B8" 
               strokeWidth="0.8" 
               strokeDasharray={idx < 2 ? "2 2" : "none"}
               opacity="0.6"
@@ -280,12 +325,12 @@ export default function Home() {
           const angle = (Math.PI * 2 / 6) * i - Math.PI / 2;
           const x2 = center + radius * Math.cos(angle);
           const y2 = center + radius * Math.sin(angle);
-          return <line key={i} x1={center} y1={center} x2={x2} y2={y2} stroke="#D4A3A3" strokeWidth="0.8" opacity="0.5" />;
+          return <line key={i} x1={center} y1={center} x2={x2} y2={y2} stroke="#94A3B8" strokeWidth="0.8" opacity="0.5" />;
         })}
         <polygon 
           points={points} 
-          fill="rgba(139, 0, 0, 0.25)" 
-          stroke="#8B0000" 
+          fill={`${radarColor}40`} 
+          stroke={radarColor} 
           strokeWidth="1.5" 
         />
         {keys.map((key, i) => {
@@ -295,7 +340,7 @@ export default function Home() {
           const r = normalizedVal * radius;
           const x = center + r * Math.cos(angle);
           const y = center + r * Math.sin(angle);
-          return <circle key={i} cx={x} cy={y} r="2" fill="#8B0000" />;
+          return <circle key={i} cx={x} cy={y} r="2" fill={radarColor} />;
         })}
       </svg>
     );
@@ -592,6 +637,7 @@ export default function Home() {
             {activeMenu === 'directory' && (
               <div className="space-y-6">
                 
+                {/* TEAM CONTROL */}
                 <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200/60 space-y-4">
                   <div className="flex justify-between items-center">
                     <h3 className="text-xs font-black uppercase text-[#00008B] tracking-wider">TEAM CONTROL</h3>
@@ -603,57 +649,64 @@ export default function Home() {
                       const isUnlocked = unlockedTeams[school.key];
 
                       return (
-                        <div key={school.key} className={`p-4 rounded-2xl border space-y-3 uppercase ${school.isChampion ? 'bg-amber-50/40 border-amber-300' : 'bg-[#F8F5F9] border-slate-200'}`}>
-                          <div className="flex justify-between items-center text-xs font-black">
-                            <div className="flex items-center gap-2 truncate">
-                              <div className="w-6 h-6 flex-shrink-0 flex items-center justify-center bg-white rounded-lg shadow-sm p-0.5 border border-slate-100">
-                                <img src={school.logo} alt={school.name} className="w-full h-full object-contain" />
-                              </div>
-                              <span className="text-[#00008B] truncate">
-                                {school.name} {school.isChampion && '👑'}
-                              </span>
-                            </div>
-                            <span className={`text-[10px] flex-shrink-0 ${isUnlocked ? 'text-emerald-600' : 'text-rose-500'}`}>
+                        <div 
+                          key={school.key} 
+                          className={`p-5 rounded-2xl border flex flex-col items-center text-center space-y-4 uppercase transition-all shadow-sm ${
+                            school.isChampion ? 'bg-amber-50/40 border-amber-300' : 'bg-[#F8F5F9] border-slate-200'
+                          }`}
+                        >
+                          {/* แก้ไขให้รูปโลโก้ไม่มีพื้นหลังสีขาว กรอบ และเงา */}
+                          <div className="w-20 h-20 flex items-center justify-center">
+                            <img src={school.logo} alt={school.name} className="w-full h-full object-contain" />
+                          </div>
+
+                          <div className="space-y-1 w-full">
+                            <h4 className="text-xs font-black text-[#00008B] tracking-wide line-clamp-1">
+                              {school.name} {school.isChampion && '👑'}
+                            </h4>
+                            <span className={`text-[10px] font-bold block ${isUnlocked ? 'text-emerald-600' : 'text-rose-500'}`}>
                               {isUnlocked ? '🔓 UNLOCKED' : '🔒 LOCKED'}
                             </span>
                           </div>
 
-                          {!isUnlocked ? (
-                            <div className="space-y-2">
-                              <input 
-                                type="password" 
-                                placeholder="TEAM PASSWORD"
-                                value={passwordInputs[school.key]}
-                                onChange={(e) => setPasswordInputs({ ...passwordInputs, [school.key]: e.target.value })}
-                                className="w-full bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800"
-                              />
+                          <div className="w-full space-y-2 mt-auto">
+                            {!isUnlocked ? (
+                              <>
+                                <input 
+                                  type="password" 
+                                  placeholder="TEAM PASSWORD"
+                                  value={passwordInputs[school.key]}
+                                  onChange={(e) => setPasswordInputs({ ...passwordInputs, [school.key]: e.target.value })}
+                                  className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 text-center font-bold"
+                                />
+                                <button 
+                                  onClick={() => handleUnlock(school.key)}
+                                  className="w-full bg-[#00008B] hover:bg-blue-900 text-white font-black text-xs py-2 rounded-xl shadow uppercase transition"
+                                >
+                                  UNLOCK
+                                </button>
+                                {errorMessages[school.key] && (
+                                  <p className="text-[10px] text-rose-500 font-bold normal-case">{errorMessages[school.key]}</p>
+                                )}
+                              </>
+                            ) : (
                               <button 
-                                onClick={() => handleUnlock(school.key)}
-                                className="w-full bg-[#00008B] text-white font-black text-xs py-2 rounded-xl shadow uppercase"
+                                onClick={() => {
+                                  setUnlockedTeams(prev => ({ ...prev, [school.key]: false }));
+                                  const stillHasUnlocked = Object.entries(unlockedTeams).some(([k, val]) => k !== school.key && val);
+                                  if (!stillHasUnlocked) {
+                                    setActiveMenu("dashboard");
+                                    setSelectedSchool("All");
+                                  } else {
+                                    setSelectedSchool("All");
+                                  }
+                                }}
+                                className="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs py-2 rounded-xl uppercase transition"
                               >
-                                UNLOCK
+                                LOG OUT
                               </button>
-                              {errorMessages[school.key] && (
-                                <p className="text-[10px] text-rose-500 font-bold normal-case">{errorMessages[school.key]}</p>
-                              )}
-                            </div>
-                          ) : (
-                            <button 
-                              onClick={() => {
-                                setUnlockedTeams(prev => ({ ...prev, [school.key]: false }));
-                                const stillHasUnlocked = Object.entries(unlockedTeams).some(([k, val]) => k !== school.key && val);
-                                if (!stillHasUnlocked) {
-                                  setActiveMenu("dashboard");
-                                  setSelectedSchool("All");
-                                } else {
-                                  setSelectedSchool("All");
-                                }
-                              }}
-                              className="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs py-2 rounded-xl uppercase"
-                            >
-                              Log out
-                            </button>
-                          )}
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -708,14 +761,14 @@ export default function Home() {
                     filteredChars.map((char) => {
                       const teamUnlocked = unlockedTeams[char.school];
                       const isFlipped = !!flippedCards[char.id];
-                      const totalStats = char.stats.shoot + char.stats.control + char.stats.speed + char.stats.defence + char.stats.power + char.stats.catch;
+                      const theme = getSchoolTheme(char.school);
 
                       return (
-                        <div key={char.id} className="w-full max-w-[450px] mx-auto bg-[#FDECEC] border border-slate-200 shadow-lg overflow-hidden relative transition-all duration-300">
+                        <div key={char.id} className={`w-full max-w-[450px] mx-auto ${theme.bg} border ${theme.border} shadow-lg overflow-hidden relative transition-all duration-300`}>
                           
-                          <div className="bg-[#9E0B0F] text-white px-4 py-3 flex justify-between items-center shadow-md">
+                          <div className={`${theme.headerBg} text-white px-4 py-3 flex justify-between items-center shadow-md`}>
                             <span className="text-[12px] font-black tracking-widest uppercase">
-                              {isFlipped ? "ACTIVITY & STATS (BACK)" : "INAZUMA ID CARD"}
+                              {isFlipped ? "ACTIVITY LOG" : "INAZUMA ID CARD"}
                             </span>
                             <div className="flex items-center gap-3">
                               <span className="text-[10px] font-bold tracking-widest text-amber-300">#INZ_NF</span>
@@ -734,25 +787,25 @@ export default function Home() {
                             {!isFlipped ? (
                               <div className="flex gap-4">
                                 <div className="w-[140px] flex-shrink-0 flex flex-col gap-2">
-                                  <div className="w-full aspect-[4/5] bg-white border border-[#9E0B0F] p-1.5 shadow-sm">
+                                  <div className={`w-full aspect-[4/5] bg-white border ${theme.border} p-1.5 shadow-sm`}>
                                     <img src={char.image} alt={char.name} className="w-full h-full object-cover" />
                                   </div>
                                   <div className="grid grid-cols-2 gap-1.5">
-                                    <div className="bg-white border border-[#9E0B0F]/30 p-1.5 text-center shadow-sm">
+                                    <div className={`bg-white border ${theme.border} p-1.5 text-center shadow-sm`}>
                                       <span className="text-[7px] font-bold text-slate-400 block mb-0.5 tracking-wider">POSITION</span>
-                                      <span className="text-[10px] font-black text-[#9E0B0F] block truncate">{char.position}</span>
+                                      <span className={`text-[10px] font-black ${theme.accent} block truncate`}>{char.position}</span>
                                     </div>
-                                    <div className="bg-white border border-[#9E0B0F]/30 p-1.5 text-center shadow-sm">
+                                    <div className={`bg-white border ${theme.border} p-1.5 text-center shadow-sm`}>
                                       <span className="text-[7px] font-bold text-slate-400 block mb-0.5 tracking-wider">ELEMENT</span>
                                       <span className="text-[10px] font-black text-[#0088CC] block truncate">{char.element}</span>
                                     </div>
                                   </div>
                                 </div>
 
-                                <div className="flex-1 flex flex-col justify-start">
-                                  <div className="mb-2 pb-2 border-b border-[#D4A3A3]/60">
-                                    <span className="text-[8px] font-black text-[#9E0B0F] block tracking-widest mb-0.5">NAME / SURNAME</span>
-                                    <h4 className="text-[18px] font-black text-[#9E0B0F] leading-tight mb-2 tracking-wide">{char.name}</h4>
+                                <div className="flex-1 flex flex-col justify-between">
+                                  <div className="mb-2 pb-2 border-b border-slate-300/60">
+                                    <span className={`text-[8px] font-black ${theme.accent} block tracking-widest mb-0.5`}>NAME / SURNAME</span>
+                                    <h4 className={`text-[18px] font-black ${theme.accent} leading-tight mb-2 tracking-wide`}>{char.name}</h4>
                                     <div className="flex items-center gap-2">
                                       <span className="bg-[#FFF4B3] text-slate-800 text-[10px] px-1.5 py-0.5 font-bold border border-[#FDE047] leading-none">
                                         {char.year}
@@ -761,7 +814,7 @@ export default function Home() {
                                     </div>
                                   </div>
 
-                                  <div className="bg-white border border-[#D4A3A3] p-3 shadow-sm flex-1 flex flex-col justify-between relative">
+                                  <div className={`bg-white border ${theme.border} p-3 shadow-sm flex-1 flex flex-col justify-center relative`}>
                                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[80px] opacity-[0.03] pointer-events-none">
                                       ⚽
                                     </div>
@@ -792,37 +845,32 @@ export default function Home() {
                                         <span className="text-pink-500 font-black">{char.stats.catch}</span>
                                       </div>
                                     </div>
-
-                                    <div className="border-t-[1.5px] border-[#9E0B0F] mt-2 pt-2 flex justify-between items-center relative z-10">
-                                      <span className="text-sm font-black text-[#9E0B0F]">TOTAL</span>
-                                      <span className="text-[15px] font-black text-slate-900">{totalStats}</span>
-                                    </div>
                                   </div>
                                 </div>
                               </div>
                             ) : (
-                              <div className="bg-white border border-[#D4A3A3] p-4 rounded-xl shadow-inner space-y-3">
+                              <div className={`bg-white border ${theme.border} p-4 rounded-xl shadow-inner space-y-3`}>
                                 <div className="grid grid-cols-12 gap-3 items-center">
                                   <div className="col-span-7 space-y-2.5">
-                                    <div className="bg-[#FDECEC] border border-[#D4A3A3]/60 p-3 rounded-xl space-y-2 shadow-sm">
-                                      <span className="text-[9px] font-black text-[#9E0B0F] uppercase tracking-wider block">MATCH & ACTIVITY LOG</span>
+                                    <div className={`${theme.bg} border ${theme.border} p-3 rounded-xl space-y-2 shadow-sm`}>
+                                      <span className={`text-[9px] font-black ${theme.accent} uppercase tracking-wider block`}>ACTIVITY LOG</span>
                                       <div className="grid grid-cols-2 gap-1.5 text-[9px] font-bold text-slate-700">
-                                        <div>MATCHES PLAYED: <span className="text-[#9E0B0F] font-black block">{char.attendanceBack.matchesPlayed}</span></div>
-                                        <div>EVENTS JOINED: <span className="text-[#9E0B0F] font-black block">{char.attendanceBack.eventsJoined}</span></div>
-                                        <div className="col-span-2">WEEKLY PRACTICE: <span className="text-[#9E0B0F] font-black">{char.attendanceBack.weeklyPractice}</span></div>
+                                        <div>MATCHES PLAYED: <span className={`${theme.accent} font-black block`}>{char.attendanceBack.matchesPlayed}</span></div>
+                                        <div>EVENTS JOINED: <span className={`${theme.accent} font-black block`}>{char.attendanceBack.eventsJoined}</span></div>
+                                        <div className="col-span-2">WEEKLY PRACTICE : <span className={`${theme.accent} font-black`}>{char.attendanceBack.weeklyPractice}</span></div>
                                       </div>
                                     </div>
 
-                                    <div className="flex justify-between items-center bg-white border border-[#D4A3A3]/50 px-3 py-2 rounded-xl text-[9px] font-black text-slate-600">
-                                      <span>BONUS POINTS ADDED:</span>
+                                    <div className="flex justify-between items-center bg-white border border-slate-300 px-3 py-2 rounded-xl text-[9px] font-black text-slate-600">
+                                      <span>BONUS POINTS :</span>
                                       <span className="text-emerald-600">{char.attendanceBack.bonusPointsAdded}</span>
                                     </div>
                                   </div>
 
-                                  <div className="col-span-5 flex flex-col items-center justify-center bg-[#FDECEC] border border-[#D4A3A3] p-2 rounded-xl shadow-inner">
-                                    <span className="text-[8px] font-black text-[#9E0B0F] uppercase tracking-widest mb-1">STATS RADAR (20-25)</span>
-                                    {renderRadarPolygon(char.stats)}
-                                    <span className="text-[7px] font-bold text-slate-400 mt-1 uppercase">6-AXIS ATTRIBUTES</span>
+                                  <div className={`col-span-5 flex flex-col items-center justify-center ${theme.bg} border ${theme.border} p-2 rounded-xl shadow-inner`}>
+                                    <span className={`text-[8px] font-black ${theme.accent} uppercase tracking-widest mb-1`}>STATS RADAR</span>
+                                    {renderRadarPolygon(char.stats, theme.radarColor)}
+                                    <span className="text-[7px] font-bold text-slate-400 mt-1 uppercase">ATTRIBUTES</span>
                                   </div>
                                 </div>
                               </div>

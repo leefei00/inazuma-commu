@@ -473,8 +473,8 @@ export default function Home() {
                   <div className="overflow-hidden whitespace-nowrap relative w-full ml-3">
                     <div className="inline-block animate-[marqueeLoop_25s_linear_infinite] text-xs font-bold tracking-wide uppercase text-white/90">
                       <span className="mx-24">⚡ ยินดีต้อนรับสู่ Inazuma Eleven New Frontier Season 2 !</span>
-                      <span className="mx-24">⚡ ยินดีต้อนรับสู่ Inazuma Eleven New Frontier Season 2 !</span>
-                      <span className="mx-24">⚡ ยินดีต้อนรับสู่ Inazuma Eleven New Frontier Season 2 !</span>
+                      <span className="mx-24">⚡ ยินดีกับ HAKUKYO จากทีม ZAKKAZE สำหรับใบแดงใบแรกของมู !</span>
+                      <span className="mx-24">⚡ ยินดีกับ HAKUKYO จากทีม ZAKKAZE กับ HAT TRICK ในแมทซ์สุดท้ายของการแข่งขัน !</span>
                     </div>
                   </div>
                 </div>
@@ -539,7 +539,7 @@ export default function Home() {
                     <div className="space-y-1">
                       <h4 className="text-sm font-black text-[#00008B] uppercase tracking-wide">COMING SOON</h4>
                       <p className="text-xs text-slate-500 font-medium normal-case max-w-md mx-auto">
-                        โปรแกรมการแข่งขันและตารางนัดถัดไปของ Season 2 จะประกาศให้ทราบเร็วๆ นี้ !
+                        โปรแกรมการแข่งขันและตารางนัดถัดไปของ Season 2 จะประกาศให้ทราบเร็วๆ นี้!
                       </p>
                     </div>
                   </div>

@@ -32,13 +32,19 @@ client.on('interactionCreate', async interaction => {
     const catchStat = interaction.options.getInteger('catch');
     const position = interaction.options.getString('position');
     const element = interaction.options.getString('element');
+    
+    // ดึงไฟล์รูปภาพที่ผู้ใช้อัปโหลดแนบมา (เปลี่ยนจาก getString เป็น getAttachment)
+    const attachment = interaction.options.getAttachment('image');
+    const imageUrl = attachment ? attachment.url : null; 
 
     // แจ้งเตือนบอทให้รับทราบคำสั่งชั่วคราว (ป้องกัน Time out)
     await interaction.deferReply({ flags: 64 });
 
     try {
-      // 2. ยิงข้อมูล Request ไปที่ API /api/players ของ Next.js
-      const response = await fetch('http://localhost:3000/api/players', {
+      // 2. ยิงข้อมูล Request ไปที่ API ของเว็บ
+      const apiUrl = process.env.API_URL || 'http://localhost:3000/api/players';
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json' 
@@ -54,7 +60,8 @@ client.on('interactionCreate', async interaction => {
           power,
           catch: catchStat,
           position,
-          element
+          element,
+          image: imageUrl // ส่งลิงก์ไฟล์รูปภาพที่อัปโหลดเข้าฐานข้อมูล
         })
       });
 
@@ -81,7 +88,8 @@ client.on('interactionCreate', async interaction => {
 client.on('messageCreate', async message => {
   if (message.content === '!chars') {
     try {
-      const response = await fetch('http://localhost:3000/api/players');
+      const apiUrl = process.env.API_URL || 'http://localhost:3000/api/players';
+      const response = await fetch(apiUrl);
       const data = await response.json();
       
       let reply = '**รายชื่อตัวละครจากเว็บ:**\n';

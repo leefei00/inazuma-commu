@@ -17,6 +17,14 @@ const commands = [
       option.setName('school')
         .setDescription('ชื่อโรงเรียน / สังกัด')
         .setRequired(true))
+    .addStringOption(option => 
+      option.setName('position')
+        .setDescription('ตำแหน่ง (เช่น FW, MF, DF, GK, MANAGER)')
+        .setRequired(true))
+    .addStringOption(option => 
+      option.setName('element')
+        .setDescription('ธาตุ (เช่น FIRE, WIND, WOOD, EARTH)')
+        .setRequired(true))
     .addIntegerOption(option => 
       option.setName('shoot')
         .setDescription('ค่าพลัง Shoot')
@@ -41,13 +49,9 @@ const commands = [
       option.setName('catch')
         .setDescription('ค่าพลัง Catch')
         .setRequired(true))
-    .addStringOption(option => 
-      option.setName('position')
-        .setDescription('ตำแหน่ง (เช่น FW, MF, DF, GK)')
-        .setRequired(true))
-    .addStringOption(option => 
-      option.setName('element')
-        .setDescription('ธาตุ (เช่น ไฟ, ลม, ไม้, ดิน)')
+    .addAttachmentOption(option => 
+      option.setName('image')
+        .setDescription('อัปโหลดรูปภาพตัวละคร')
         .setRequired(true)),
 ].map(command => command.toJSON());
 

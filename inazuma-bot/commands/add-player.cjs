@@ -5,36 +5,94 @@ module.exports = {
     .setName('add-player')
     .setDescription('เพิ่มข้อมูลตัวละครใหม่เข้าสู่ Inazuma Commu Database')
     .addStringOption(option => 
-      option.setName('name')
-        .setDescription('ชื่อตัวละคร')
+      option.setName('name-surname')
+        .setDescription('ชื่อ-นามสกุล ตัวละคร')
+        .setRequired(true))
+    .addStringOption(option => 
+      option.setName('year')
+        .setDescription('ปีการศึกษา (เช่น 01, 02, 03)')
         .setRequired(true))
     .addStringOption(option => 
       option.setName('school')
-        .setDescription('ชื่อโรงเรียน / สังกัด')
+        .setDescription('รหัสโรงเรียน (เช่น Zakkaze, Sanrin, Katsuen, Gokuyou)')
+        .setRequired(true))
+    .addStringOption(option => 
+      option.setName('position')
+        .setDescription('ตำแหน่ง (เช่น FW, MF, DF, GK, MANAGER)')
+        .setRequired(true))
+    .addStringOption(option => 
+      option.setName('element')
+        .setDescription('ธาตุ (เช่น FIRE, WIND, WOOD, EARTH)')
         .setRequired(true))
     .addIntegerOption(option => 
-      option.setName('kick')
-        .setDescription('ค่าพลังเตะ (Kick)')
+      option.setName('shoot')
+        .setDescription('ค่าพลัง Shoot (20-25)')
+        .setRequired(true))
+    .addIntegerOption(option => 
+      option.setName('control')
+        .setDescription('ค่าพลัง Control (20-25)')
+        .setRequired(true))
+    .addIntegerOption(option => 
+      option.setName('speed')
+        .setDescription('ค่าพลัง Speed (20-25)')
+        .setRequired(true))
+    .addIntegerOption(option => 
+      option.setName('defence')
+        .setDescription('ค่าพลัง Defence (20-25)')
+        .setRequired(true))
+    .addIntegerOption(option => 
+      option.setName('power')
+        .setDescription('ค่าพลัง Power (20-25)')
+        .setRequired(true))
+    .addIntegerOption(option => 
+      option.setName('catch')
+        .setDescription('ค่าพลัง Catch (20-25)')
+        .setRequired(true))
+    .addAttachmentOption(option => 
+      option.setName('image')
+        .setDescription('อัปโหลดรูปภาพตัวละคร')
         .setRequired(true)),
 
   async execute(interaction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: 64 });
 
-    const playerName = interaction.options.getString('name');
-    const playerSchool = interaction.options.getString('school');
-    const playerKick = interaction.options.getInteger('kick');
+    const nameSurname = interaction.options.getString('name-surname');
+    const year = interaction.options.getString('year');
+    const school = interaction.options.getString('school');
+    const position = interaction.options.getString('position');
+    const element = interaction.options.getString('element');
+    const shoot = interaction.options.getInteger('shoot');
+    const control = interaction.options.getInteger('control');
+    const speed = interaction.options.getInteger('speed');
+    const defence = interaction.options.getInteger('defence');
+    const power = interaction.options.getInteger('power');
+    const catchStat = interaction.options.getInteger('catch');
+    
+    // ดึงไฟล์รูปภาพที่อัปโหลด
+    const attachment = interaction.options.getAttachment('image');
+    const imageUrl = attachment ? attachment.url : null;
 
     try {
-      // ⚠️ อย่าลืมเปลี่ยน URL นี้เป็นโดเมน Vercel ของคุณจริงๆ
-      const response = await fetch('https://inazuma-commu.vercel.app/api/players', {
+      const apiUrl = process.env.API_URL || 'https://inazuma-commu.vercel.app/api/players';
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          name: playerName,
-          school: playerSchool,
-          kick: playerKick,
+          name: nameSurname,
+          year,
+          school,
+          position,
+          element,
+          shoot,
+          control,
+          speed,
+          defence,
+          power,
+          catch: catchStat,
+          image: imageUrl
         }),
       });
 
@@ -44,7 +102,7 @@ module.exports = {
         throw new Error(result.error || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
       }
 
-      await interaction.editReply(`✅ เพิ่มตัวละคร **${playerName}** สำเร็จเรียบร้อยแล้ว`);
+      await interaction.editReply(`✅ เพิ่มตัวละคร **${nameSurname}** สังกัดโรงเรียน **${school}** สำเร็จเรียบร้อยแล้ว!`);
     } catch (error) {
       console.error(error);
       await interaction.editReply(`❌ เกิดข้อผิดพลาด: ${error.message}`);

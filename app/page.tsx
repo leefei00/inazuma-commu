@@ -1,14 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { createClient } from "@supabase/supabase-js";
-
-// สร้างฟังก์ชัน Helper เพื่อเรียก Client โดยปลอดภัยจากปัญหาค่าว่างตอน Build
-const getSupabaseClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://oyftdgottzfzjtfbsibe.supabase.co";
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "dummy-key-to-prevent-crash";
-  return createClient(supabaseUrl, supabaseAnonKey);
-};
+import { supabase } from "@/utils/supabase";
 
 interface School {
   name: string;
@@ -84,7 +77,6 @@ export default function Home() {
   useEffect(() => {
     async function fetchPlayers() {
       try {
-        const supabase = getSupabaseClient();
         const { data, error } = await supabase.from("players").select("*");
         if (error) {
           console.error("Error fetching players:", error);

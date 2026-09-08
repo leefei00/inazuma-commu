@@ -858,4 +858,3 @@ export default function Home() {
     </div>
   );
 }
-Update radar chart fix

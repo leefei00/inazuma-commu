@@ -1,6 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+// สร้างฟังก์ชัน Helper เพื่อเรียก Client โดยปลอดภัยจากปัญหาค่าว่างตอน Build
+const getSupabaseClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://oyftdgottzfzjtfbsibe.supabase.co";
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "dummy-key-to-prevent-crash";
+  return createClient(supabaseUrl, supabaseAnonKey);
+};
 
 interface School {
   name: string;
@@ -70,34 +78,82 @@ export default function Home() {
     setFlippedCards(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    async function fetchPlayers() {
+      try {
+        const supabase = getSupabaseClient();
+        const { data, error } = await supabase.from("players").select("*");
+        if (error) {
+          console.error("Error fetching players:", error);
+        } else if (data) {
+          const formattedData: Character[] = data.map((p: any, index: number) => ({
+            id: p.id || index + 1,
+            name: p.name || "UNKNOWN",
+            year: p.year || "01",
+            school: p.school || "Katsuen",
+            schoolName: p.school_name || p.school || "ACADEMY",
+            position: p.position || "MF",
+            element: p.element || "FIRE",
+            isChampion: false,
+            image: p.image || "https://via.placeholder.com/150",
+            stats: {
+              shoot: p.shoot || 20,
+              control: p.control || 20,
+              speed: p.speed || 20,
+              defence: p.defence || 20,
+              power: p.power || 20,
+              catch: p.catch || 20,
+            },
+            attendanceBack: {
+              matchesPlayed: p.matches_played || 0,
+              eventsJoined: p.events_joined || 0,
+              weeklyPractice: p.weekly_practice || "1 ครั้ง / สัปดาห์",
+              bonusPointsAdded: p.bonus_points || "+0 แต้ม",
+            },
+          }));
+          setCharacters(formattedData);
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchPlayers();
+  }, []);
+
   const [schoolsData, setSchoolsData] = useState<School[]>([
     { 
       name: "ZAKKAZE GAKUEN", 
       badge: "ZAKKAZE", 
       key: "Zakkaze", 
       matches: 5, wins: 4, losses: 0, draws: 1, isChampion: true,
-      logo: "https://media.discordapp.net/attachments/1530182532828758066/1546193912190865508/Zakkaze_Gakuen.png?ex=6a9ee4cb&is=6a9d934b&hm=ff019b1c94dc2471f628e8571b77c32cb22f01142b53c5b763ff1b68207649ed&=&format=webp&quality=lossless" 
+      logo: "https://oyftdgottzfzjtfbsibe.supabase.co/storage/v1/object/public/logos/Zakkaze%20Gakuen.png" 
     },
     { 
       name: "SANRIN JUNIOR HIGH SCHOOL", 
       badge: "SANRIN", 
       key: "Sanrin", 
       matches: 5, wins: 2, losses: 3, draws: 0, isChampion: false,
-      logo: "https://media.discordapp.net/attachments/1530182532828758066/1546193893341663302/Sanrin_Junior_Highschool.png?ex=6a9ee4c7&is=6a9d9347&hm=adfbe3e1055f33ec8682c4458c0224779a6ea67db80c9581c07cfc9da91c3b9e&=&format=webp&quality=lossless" 
+      logo: "https://oyftdgottzfzjtfbsibe.supabase.co/storage/v1/object/public/logos/Sanrin%20Junior%20Highschool.png" 
     },
     { 
       name: "KATSUEN ACADEMY", 
       badge: "KATSUEN", 
       key: "Katsuen", 
       matches: 5, wins: 1, losses: 1, draws: 3, isChampion: false,
-      logo: "https://media.discordapp.net/attachments/1530182532828758066/1546193867672653934/Katsuen_Academy.png?ex=6a9ee4c0&is=6a9d9340&hm=73591905d3cf58348ec4bc81429b35cdeee3768bceee1596bfd85fd249cd5678&=&format=webp&quality=lossless" 
+      logo: "https://oyftdgottzfzjtfbsibe.supabase.co/storage/v1/object/public/logos/Katsuen%20Academy.png" 
     },
     { 
       name: "GOKUYOU", 
       badge: "GOKUYOU", 
       key: "Gokuyou", 
       matches: 5, wins: 0, losses: 3, draws: 2, isChampion: false,
-      logo: "https://media.discordapp.net/attachments/1530182532828758066/1546193849259393186/Gokuyou.png?ex=6a9ee4bc&is=6a9d933c&hm=cd52d559910daf34d72c73ac748c7b6cb8a190c7bad709744838c69257c3b860&=&format=webp&quality=lossless" 
+      logo: "https://oyftdgottzfzjtfbsibe.supabase.co/storage/v1/object/public/logos/Gokuyou.png" 
     },
   ]);
 
@@ -179,27 +235,6 @@ export default function Home() {
       setHomeErrorMessage("❌ รหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง");
     }
   };
-
-  const characters: Character[] = [
-    {
-      id: 1,
-      name: "HOJO SATOMI",
-      year: "03",
-      school: "Katsuen",
-      schoolName: "KATSUEN ACADEMY",
-      position: "MANAGER",
-      element: "FIRE",
-      isChampion: false,
-      image: "https://media.discordapp.net/attachments/1530182532828758066/1546238621571612763/26262.png?ex=6a9f0e6f&is=6a9dbcef&hm=f56db7708fdfc6d8aa50eecd4b176e593fcefd1cda32f125727f80f85b16e2fa&=&format=webp&quality=lossless&width=722&height=1024", 
-      stats: { shoot: 25, control: 25, speed: 25, defence: 25, power: 25, catch: 25 }, // อิงตามภาพตัวอย่าง (25 ทั้งหมด)
-      attendanceBack: {
-        matchesPlayed: 5,
-        eventsJoined: 12,
-        weeklyPractice: "1 ครั้ง / สัปดาห์",
-        bonusPointsAdded: "+0 แต้ม"
-      }
-    }
-  ];
 
   const filteredChars = characters.filter(c => {
     const isUnlocked = unlockedTeams[c.school];
@@ -706,7 +741,6 @@ export default function Home() {
                           <div className="p-4 space-y-3">
                             {!isFlipped ? (
                               <div className="flex gap-4">
-                                {/* Left Column: Image & Badges */}
                                 <div className="w-[140px] flex-shrink-0 flex flex-col gap-2">
                                   <div className="w-full aspect-[4/5] bg-white border border-[#9E0B0F] p-1.5 shadow-sm">
                                     <img src={char.image} alt={char.name} className="w-full h-full object-cover" />
@@ -723,7 +757,6 @@ export default function Home() {
                                   </div>
                                 </div>
 
-                                {/* Right Column: Name & Stats */}
                                 <div className="flex-1 flex flex-col justify-start">
                                   <div className="mb-2 pb-2 border-b border-[#D4A3A3]/60">
                                     <span className="text-[8px] font-black text-[#9E0B0F] block tracking-widest mb-0.5">NAME / SURNAME</span>
@@ -776,11 +809,8 @@ export default function Home() {
                                 </div>
                               </div>
                             ) : (
-                              /* ---------------- ด้านหลังการ์ด (อัปเดตใหม่) ---------------- */
                               <div className="bg-white border border-[#D4A3A3] p-4 rounded-xl shadow-inner space-y-3">
                                 <div className="grid grid-cols-12 gap-3 items-center">
-                                  
-                                  {/* ฝั่งซ้าย: แมทช์และสถิติการเข้าร่วม */}
                                   <div className="col-span-7 space-y-2.5">
                                     <div className="bg-[#FDECEC] border border-[#D4A3A3]/60 p-3 rounded-xl space-y-2 shadow-sm">
                                       <span className="text-[9px] font-black text-[#9E0B0F] uppercase tracking-wider block">MATCH & ACTIVITY LOG</span>
@@ -797,13 +827,11 @@ export default function Home() {
                                     </div>
                                   </div>
 
-                                  {/* ฝั่งขวา: กราฟเรดาร์ (ฐาน 20 - สูงสุด 25) */}
                                   <div className="col-span-5 flex flex-col items-center justify-center bg-[#FDECEC] border border-[#D4A3A3] p-2 rounded-xl shadow-inner">
                                     <span className="text-[8px] font-black text-[#9E0B0F] uppercase tracking-widest mb-1">STATS RADAR (20-25)</span>
                                     {renderRadarPolygon(char.stats)}
                                     <span className="text-[7px] font-bold text-slate-400 mt-1 uppercase">6-AXIS ATTRIBUTES</span>
                                   </div>
-
                                 </div>
                               </div>
                             )}

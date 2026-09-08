@@ -9,20 +9,84 @@ const client = new Client({
   ] 
 });
 
-client.on('ready', () => {
+client.once('clientReady', () => {
   console.log(`ล็อกอินสำเร็จในชื่อ: ${client.user.tag}`);
 });
 
+// ดักจับ Slash Commands (เช่น /add-player)
+client.on('interactionCreate', async interaction => {
+  if (!interaction.isChatInputCommand()) return;
+
+  const { commandName } = interaction;
+
+  if (commandName === 'add-player') {
+    // 1. ดึงค่าทั้งหมดที่ผู้ใช้กรอกผ่านช่อง Discord
+    const nameSurname = interaction.options.getString('name-surname');
+    const year = interaction.options.getString('year');
+    const school = interaction.options.getString('school');
+    const shoot = interaction.options.getInteger('shoot');
+    const control = interaction.options.getInteger('control');
+    const speed = interaction.options.getInteger('speed');
+    const defence = interaction.options.getInteger('defence');
+    const power = interaction.options.getInteger('power');
+    const catchStat = interaction.options.getInteger('catch');
+    const position = interaction.options.getString('position');
+    const element = interaction.options.getString('element');
+
+    // แจ้งเตือนบอทให้รับทราบคำสั่งชั่วคราว (ป้องกัน Time out)
+    await interaction.deferReply({ flags: 64 });
+
+    try {
+      // 2. ยิงข้อมูล Request ไปที่ API /api/players ของ Next.js
+      const response = await fetch('http://localhost:3000/api/players', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({
+          name: nameSurname,
+          year,
+          school,
+          shoot,
+          control,
+          speed,
+          defence,
+          power,
+          catch: catchStat,
+          position,
+          element
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`API Response ไม่สำเร็จ: ${errorText}`);
+      }
+
+      // 3. แจ้งเตือนว่าสำเร็จ
+      await interaction.editReply({
+        content: `🎉 บันทึกข้อมูลตัวละคร **${nameSurname}** สังกัดโรงเรียน **${school}** ลงฐานข้อมูลสำเร็จแล้ว!`
+      });
+
+    } catch (error) {
+      console.error('Error saving character:', error);
+      await interaction.editReply({
+        content: '❌ เกิดข้อผิดพลาดในการบันทึกข้อมูลลงฐานข้อมูล (ตรวจสอบ Terminal ของบอทเพื่อดูรายละเอียด Error)'
+      });
+    }
+  }
+});
+
+// โค้ดสำหรับรับข้อความแชท (!chars)
 client.on('messageCreate', async message => {
   if (message.content === '!chars') {
     try {
-      // ดึงข้อมูลจาก API ของ Next.js ที่เราเปิดรันไว้
-      const response = await fetch('http://localhost:3000/api/characters');
+      const response = await fetch('http://localhost:3000/api/players');
       const data = await response.json();
       
       let reply = '**รายชื่อตัวละครจากเว็บ:**\n';
       data.forEach(c => {
-        reply += `- ${c.name} (${c.class})\n`;
+        reply += `- ${c.name} (${c.class || c.school})\n`;
       });
       message.reply(reply);
     } catch (error) {
@@ -31,5 +95,4 @@ client.on('messageCreate', async message => {
   }
 });
 
-// ดึง Token จากไฟล์ .env มาใช้งานอย่างปลอดภัย
 client.login(process.env.DISCORD_BOT_TOKEN);

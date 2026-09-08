@@ -74,6 +74,117 @@ export default function Home() {
   const [characters, setCharacters] = useState<Character[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // --- Theme helper function ---
+  const getSchoolTheme = (schoolKey: string) => {
+    switch (schoolKey) {
+      case "Zakkaze":
+        return {
+          bg: "bg-[#E0F2FE]",
+          headerBg: "bg-[#0284C7]",
+          border: "border-[#7DD3FC]",
+          accent: "text-[#0284C7]",
+          radarColor: "#0284C7"
+        };
+      case "Sanrin":
+        return {
+          bg: "bg-[#DCFCE7]",
+          headerBg: "bg-[#16A34A]",
+          border: "border-[#86EFAC]",
+          accent: "text-[#16A34A]",
+          radarColor: "#16A34A"
+        };
+      case "Katsuen":
+        return {
+          bg: "bg-[#FDECEC]",
+          headerBg: "bg-[#9E0B0F]",
+          border: "border-[#D4A3A3]",
+          accent: "text-[#9E0B0F]",
+          radarColor: "#8B0000"
+        };
+      case "Gokuyou":
+        return {
+          bg: "bg-[#F1F5F9]",
+          headerBg: "bg-[#0F172A]",
+          border: "border-[#CBD5E1]",
+          accent: "text-[#0F172A]",
+          radarColor: "#0F172A"
+        };
+      default:
+        return {
+          bg: "bg-[#FDECEC]",
+          headerBg: "bg-[#9E0B0F]",
+          border: "border-[#D4A3A3]",
+          accent: "text-[#9E0B0F]",
+          radarColor: "#8B0000"
+        };
+    }
+  };
+
+  // --- Radar Polygon function ---
+  const renderRadarPolygon = (stats: CharacterStats, radarColor: string) => {
+    const minVal = 0;
+    const maxVal = 25;
+    const size = 110;
+    const center = size / 2;
+    const radius = 42;
+
+    const keys: (keyof CharacterStats)[] = ['shoot', 'control', 'speed', 'defence', 'power', 'catch'];
+    
+    const points = keys.map((key, i) => {
+      const angle = (Math.PI * 2 / 6) * i - Math.PI / 2;
+      const rawVal = Math.min(Math.max(stats[key], minVal), maxVal);
+      const normalizedVal = (rawVal - minVal) / (maxVal - minVal);
+      const r = normalizedVal * radius;
+      const x = center + r * Math.cos(angle);
+      const y = center + r * Math.sin(angle);
+      return `${x},${y}`;
+    }).join(' ');
+
+    return (
+      <svg width={size} height={size} className="mx-auto overflow-visible">
+        {[0.33, 0.66, 1].map((scale, idx) => {
+          const polyPoints = keys.map((_, i) => {
+            const angle = (Math.PI * 2 / 6) * i - Math.PI / 2;
+            const r = radius * scale;
+            return `${center + r * Math.cos(angle)},${center + r * Math.sin(angle)}`;
+          }).join(' ');
+          return (
+            <polygon 
+              key={idx} 
+              points={polyPoints} 
+              fill="none" 
+              stroke="#94A3B8" 
+              strokeWidth="0.8" 
+              strokeDasharray={idx < 2 ? "2 2" : "none"}
+              opacity="0.6"
+            />
+          );
+        })}
+        {keys.map((_, i) => {
+          const angle = (Math.PI * 2 / 6) * i - Math.PI / 2;
+          const x2 = center + radius * Math.cos(angle);
+          const y2 = center + radius * Math.sin(angle);
+          return <line key={i} x1={center} y1={center} x2={x2} y2={y2} stroke="#94A3B8" strokeWidth="0.8" opacity="0.5" />;
+        })}
+        <polygon 
+          points={points} 
+          fill={`${radarColor}40`} 
+          stroke={radarColor} 
+          strokeWidth="1.5" 
+        />
+        {keys.map((key, i) => {
+          const angle = (Math.PI * 2 / 6) * i - Math.PI / 2;
+          const rawVal = Math.min(Math.max(stats[key], minVal), maxVal);
+          const normalizedVal = (rawVal - minVal) / (maxVal - minVal);
+          const r = normalizedVal * radius;
+          const x = center + r * Math.cos(angle);
+          const y = center + r * Math.sin(angle);
+          return <circle key={i} cx={x} cy={y} r="2" fill={radarColor} />;
+        })}
+      </svg>
+    );
+  };
+
   useEffect(() => {
     async function fetchPlayers() {
       try {
@@ -100,10 +211,10 @@ export default function Home() {
               catch: p.catch ?? 0,
             },
             attendanceBack: {
-              matchesPlayed: p.matches_played || 0,
-              eventsJoined: p.events_joined || 0,
-              weeklyPractice: p.weekly_practice || "1 ครั้ง / สัปดาห์",
-              bonusPointsAdded: p.bonus_points || "+0 แต้ม",
+              matchesPlayed: p.matches_played ?? 0,
+              eventsJoined: p.events_joined ?? 0,
+              weeklyPractice: p.weekly_practice ?? "1 ครั้ง / สัปดาห์",
+              bonusPointsAdded: p.bonus_points ?? "+0 แต้ม",
             },
           }));
           setCharacters(formattedData);
@@ -236,70 +347,6 @@ export default function Home() {
     const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) || c.position.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSchool && matchesSearch;
   });
-
-  const renderRadarPolygon = (stats: CharacterStats) => {
-    const minVal = 20;
-    const maxVal = 25;
-    const size = 110;
-    const center = size / 2;
-    const radius = 42;
-
-    const keys: (keyof CharacterStats)[] = ['shoot', 'control', 'speed', 'defence', 'power', 'catch'];
-    
-    const points = keys.map((key, i) => {
-      const angle = (Math.PI * 2 / 6) * i - Math.PI / 2;
-      const rawVal = Math.min(Math.max(stats[key], minVal), maxVal);
-      const normalizedVal = (rawVal - minVal) / (maxVal - minVal);
-      const r = normalizedVal * radius;
-      const x = center + r * Math.cos(angle);
-      const y = center + r * Math.sin(angle);
-      return `${x},${y}`;
-    }).join(' ');
-
-    return (
-      <svg width={size} height={size} className="mx-auto overflow-visible">
-        {[0.33, 0.66, 1].map((scale, idx) => {
-          const polyPoints = keys.map((_, i) => {
-            const angle = (Math.PI * 2 / 6) * i - Math.PI / 2;
-            const r = radius * scale;
-            return `${center + r * Math.cos(angle)},${center + r * Math.sin(angle)}`;
-          }).join(' ');
-          return (
-            <polygon 
-              key={idx} 
-              points={polyPoints} 
-              fill="none" 
-              stroke="#94A3B8" 
-              strokeWidth="0.8" 
-              strokeDasharray={idx < 2 ? "2 2" : "none"}
-              opacity="0.6"
-            />
-          );
-        })}
-        {keys.map((_, i) => {
-          const angle = (Math.PI * 2 / 6) * i - Math.PI / 2;
-          const x2 = center + radius * Math.cos(angle);
-          const y2 = center + radius * Math.sin(angle);
-          return <line key={i} x1={center} y1={center} x2={x2} y2={y2} stroke="#94A3B8" strokeWidth="0.8" opacity="0.5" />;
-        })}
-        <polygon 
-          points={points} 
-          fill={`${radarColor}40`} 
-          stroke={radarColor} 
-          strokeWidth="1.5" 
-        />
-        {keys.map((key, i) => {
-          const angle = (Math.PI * 2 / 6) * i - Math.PI / 2;
-          const rawVal = Math.min(Math.max(stats[key], minVal), maxVal);
-          const normalizedVal = (rawVal - minVal) / (maxVal - minVal);
-          const r = normalizedVal * radius;
-          const x = center + r * Math.cos(angle);
-          const y = center + r * Math.sin(angle);
-          return <circle key={i} cx={x} cy={y} r="2" fill={radarColor} />;
-        })}
-      </svg>
-    );
-  };
 
   return (
     <div className="min-h-screen bg-[#000033] text-slate-100 font-sans p-4 md:p-6 flex justify-center items-start">
@@ -610,7 +657,6 @@ export default function Home() {
                             school.isChampion ? 'bg-amber-50/40 border-amber-300' : 'bg-[#F8F5F9] border-slate-200'
                           }`}
                         >
-                          {/* แก้ไขให้รูปโลโก้ไม่มีพื้นหลังสีขาว กรอบ และเงา */}
                           <div className="w-20 h-20 flex items-center justify-center">
                             <img src={school.logo} alt={school.name} className="w-full h-full object-contain" />
                           </div>

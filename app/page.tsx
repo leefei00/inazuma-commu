@@ -82,28 +82,28 @@ export default function Home() {
           console.error("Error fetching players:", error);
         } else if (data) {
           const formattedData: Character[] = data.map((p: any, index: number) => ({
-            id: p.id || index + 1,
-            name: p.name || "UNKNOWN",
-            year: p.year || "01",
-            school: p.school || "Katsuen",
-            schoolName: p.school_name || p.school || "ACADEMY",
-            position: p.position || "MF",
-            element: p.element || "FIRE",
+            id: p.id ?? (index + 1),
+            name: p.name ?? "UNKNOWN",
+            year: p.year ?? "01",
+            school: p.school ?? "Katsuen",
+            schoolName: p.school_name ?? p.school ?? "ACADEMY",
+            position: p.position ?? "MF",
+            element: p.element ?? "FIRE",
             isChampion: false,
-            image: p.image || "https://via.placeholder.com/150",
+            image: p.image ?? "https://via.placeholder.com/150",
             stats: {
-              shoot: p.shoot || 20,
-              control: p.control || 20,
-              speed: p.speed || 20,
-              defence: p.defence || 20,
-              power: p.power || 20,
-              catch: p.catch || 20,
+              shoot: p.shoot ?? 0,
+              control: p.control ?? 0,
+              speed: p.speed ?? 0,
+              defence: p.defence ?? 0,
+              power: p.power ?? 0,
+              catch: p.catch ?? 0,
             },
             attendanceBack: {
-              matchesPlayed: p.matches_played || 0,
-              eventsJoined: p.events_joined || 0,
-              weeklyPractice: p.weekly_practice || "1 ครั้ง / สัปดาห์",
-              bonusPointsAdded: p.bonus_points || "+0 แต้ม",
+              matchesPlayed: p.matches_played ?? 0,
+              eventsJoined: p.events_joined ?? 0,
+              weeklyPractice: p.weekly_practice ?? "1 ครั้ง / สัปดาห์",
+              bonusPointsAdded: p.bonus_points ?? "+0 แต้ม",
             },
           }));
           setCharacters(formattedData);
@@ -238,7 +238,7 @@ export default function Home() {
   });
 
   const renderRadarPolygon = (stats: CharacterStats) => {
-    const minVal = 20;
+    const minVal = 0;
     const maxVal = 25;
     const size = 110;
     const center = size / 2;
@@ -858,3 +858,4 @@ export default function Home() {
     </div>
   );
 }
+Update radar chart fix

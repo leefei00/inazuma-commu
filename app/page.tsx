@@ -100,10 +100,10 @@ export default function Home() {
               catch: p.catch ?? 0,
             },
             attendanceBack: {
-              matchesPlayed: p.matches_played || 0,
-              eventsJoined: p.events_joined || 0,
-              weeklyPractice: p.weekly_practice || "1 ครั้ง / สัปดาห์",
-              bonusPointsAdded: p.bonus_points || "+0 แต้ม",
+              matchesPlayed: p.matches_played ?? 0,
+              eventsJoined: p.events_joined ?? 0,
+              weeklyPractice: p.weekly_practice ?? "1 ครั้ง / สัปดาห์",
+              bonusPointsAdded: p.bonus_points ?? "+0 แต้ม",
             },
           }));
           setCharacters(formattedData);
@@ -237,8 +237,53 @@ export default function Home() {
     return matchesSchool && matchesSearch;
   });
 
-  const renderRadarPolygon = (stats: CharacterStats) => {
-    const minVal = 20;
+  const getSchoolTheme = (schoolKey: string) => {
+    switch (schoolKey) {
+      case "Zakkaze":
+        return {
+          bg: "bg-[#E0F2FE]",
+          headerBg: "bg-[#0284C7]",
+          border: "border-[#7DD3FC]",
+          accent: "text-[#0284C7]",
+          radarColor: "#0284C7"
+        };
+      case "Sanrin":
+        return {
+          bg: "bg-[#DCFCE7]",
+          headerBg: "bg-[#16A34A]",
+          border: "border-[#86EFAC]",
+          accent: "text-[#16A34A]",
+          radarColor: "#16A34A"
+        };
+      case "Katsuen":
+        return {
+          bg: "bg-[#FDECEC]",
+          headerBg: "bg-[#9E0B0F]",
+          border: "border-[#D4A3A3]",
+          accent: "text-[#9E0B0F]",
+          radarColor: "#8B0000"
+        };
+      case "Gokuyou":
+        return {
+          bg: "bg-[#F1F5F9]",
+          headerBg: "bg-[#0F172A]",
+          border: "border-[#CBD5E1]",
+          accent: "text-[#0F172A]",
+          radarColor: "#0F172A"
+        };
+      default:
+        return {
+          bg: "bg-[#FDECEC]",
+          headerBg: "bg-[#9E0B0F]",
+          border: "border-[#D4A3A3]",
+          accent: "text-[#9E0B0F]",
+          radarColor: "#8B0000"
+        };
+    }
+  };
+
+  const renderRadarPolygon = (stats: CharacterStats, radarColor: string) => {
+    const minVal = 0;
     const maxVal = 25;
     const size = 110;
     const center = size / 2;
@@ -324,8 +369,12 @@ export default function Home() {
         <aside className="md:col-span-3 bg-[#00008B] text-white p-6 flex flex-col justify-between space-y-8">
           <div className="space-y-8">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white text-[#00008B] rounded-2xl flex items-center justify-center font-black text-xl shadow-lg">
-                ⚽
+              <div className="w-10 h-10 flex items-center justify-center font-black text-xl">
+                <img 
+                  src="https://oyftdgottzfzjtfbsibe.supabase.co/storage/v1/object/public/art%20commu/log%20pci1.png" 
+                  alt="Sidebar Logo" 
+                  className="w-8 h-8 object-contain" 
+                />
               </div>
               <div>
                 <span className="font-black text-sm tracking-wider block leading-tight">INAZUMA ELEVEN</span>
@@ -390,8 +439,12 @@ export default function Home() {
           
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white px-5 py-3 rounded-full shadow-sm border border-slate-200/60">
             <div className="flex items-center gap-3 w-full md:w-auto">
-              <div className="w-8 h-8 bg-[#00008B]/10 text-[#00008B] rounded-full flex items-center justify-center font-black text-sm flex-shrink-0">
-                ⚡
+              <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                <img 
+                  src="https://oyftdgottzfzjtfbsibe.supabase.co/storage/v1/object/public/art%20commu/log%20pci1.png" 
+                  alt="Dashboard Logo" 
+                  className="w-8 h-8 object-contain" 
+                />
               </div>
               <div className="truncate">
                 <span className="text-xs md:text-sm font-black text-[#00008B] uppercase tracking-wide truncate block">
@@ -434,28 +487,34 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="bg-[#00008B] text-white p-8 rounded-3xl shadow-lg relative overflow-hidden space-y-4">
-                  <div className="absolute right-[-30px] bottom-[-40px] text-white/25 pointer-events-none select-none z-0">
-                    <svg width="200" height="200" viewBox="0 0 200 200" fill="currentColor">
+                {/* HERO BANNER - โลโก้หลัก log pci7.png ตามคำขอก่อนหน้า */}
+                <div className="bg-[#00008B] text-white p-10 md:p-16 rounded-3xl shadow-lg relative overflow-hidden flex flex-col items-center text-center space-y-6">
+                  <div className="absolute right-[-30px] bottom-[-40px] text-white/10 pointer-events-none select-none z-0">
+                    <svg width="250" height="250" viewBox="0 0 200 200" fill="currentColor">
                       <polygon points="110,0 20,90 90,90 60,200 180,80 110,80" />
                     </svg>
                   </div>
 
-                  <div className="relative z-10 space-y-4">
-                    <div className="flex flex-wrap gap-2">
-                      <span className="bg-white/20 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-wider">
+                  <div className="w-72 h-72 md:w-96 md:h-96 relative z-10 drop-shadow-2xl">
+                    <img 
+                      src="https://oyftdgottzfzjtfbsibe.supabase.co/storage/v1/object/public/art%20commu/log%20pci7.png" 
+                      alt="Community Logo" 
+                      className="w-full h-full object-contain filter drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]" 
+                    />
+                  </div>
+
+                  <div className="relative z-10 space-y-4 max-w-lg">
+                    <div className="space-y-3">
+                      <span className="bg-amber-400 text-slate-900 text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-wider shadow-sm inline-block">
                         COMMUNITY OC ROLEPLAY
                       </span>
+                      <p className="text-white/80 text-xs md:text-sm font-medium leading-relaxed normal-case block pt-1">
+                        กรอกรหัสผ่านประจำทีมของคุณเพื่อปลดล็อกและเข้าดูข้อมูลตัวละครในการแข่งขัน
+                      </p>
                     </div>
-                    <h2 className="text-2xl md:text-4xl font-black uppercase tracking-tight leading-tight">
-                      CONTROL ROOM
-                    </h2>
-                    <p className="text-white/80 text-xs md:text-sm font-medium max-w-xl leading-relaxed normal-case">
-                      กรอกรหัสผ่านประจำทีมของคุณเพื่อเข้าดูข้อมูลตัวละครของทีมท่าน
-                    </p>
 
-                    <div className="bg-white/10 p-4 rounded-2xl border border-white/20 max-w-md space-y-3 backdrop-blur-sm">
-                      <div className="text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                    <div className="bg-white/10 p-4 rounded-2xl border border-white/20 w-full max-w-md mx-auto space-y-3 backdrop-blur-sm mt-4">
+                      <div className="text-xs font-black uppercase tracking-wider flex items-center justify-center gap-1.5">
                         <span>🔐</span> ENTER TEAM PASSWORD
                       </div>
                       <div className="flex gap-2">
@@ -465,7 +524,7 @@ export default function Home() {
                           value={homeGlobalPassword}
                           onChange={(e) => setHomeGlobalPassword(e.target.value)}
                           onKeyDown={(e) => { if (e.key === 'Enter') handleHomeGlobalUnlock(); }}
-                          className="w-full bg-white text-slate-900 placeholder:text-slate-400 text-xs px-4 py-2.5 rounded-xl font-bold focus:outline-none"
+                          className="w-full bg-white text-slate-900 placeholder:text-slate-400 text-xs px-4 py-2.5 rounded-xl font-bold focus:outline-none text-center"
                         />
                         <button 
                           onClick={handleHomeGlobalUnlock}
@@ -610,7 +669,6 @@ export default function Home() {
                             school.isChampion ? 'bg-amber-50/40 border-amber-300' : 'bg-[#F8F5F9] border-slate-200'
                           }`}
                         >
-                          {/* แก้ไขให้รูปโลโก้ไม่มีพื้นหลังสีขาว กรอบ และเงา */}
                           <div className="w-20 h-20 flex items-center justify-center">
                             <img src={school.logo} alt={school.name} className="w-full h-full object-contain" />
                           </div>

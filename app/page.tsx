@@ -413,15 +413,14 @@ export default function Home() {
     setFlippedCards(prev => ({ ...prev, [charId]: !prev[charId] }));
   };
 
-  // สร้างลิงก์ Discord OAuth2 แบบ Dynamic (รองรับทั้ง Localhost และ Vercel อัตโนมัติ)
+  // สร้างลิงก์ Discord OAuth2 แบบ Dynamic (รองรับทั้ง Localhost และ Vercel อัตโนมัติ ป้องกัน URL พัง)
   const [discordLoginUrl, setDiscordLoginUrl] = useState<string>("#");
 
   useEffect(() => {
-    const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '154643511134244605';
+    const clientId = '154643511134244605';
     const redirectUri = `${window.location.origin}/api/auth/discord/callback`;
-    setDiscordLoginUrl(
-      `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify`
-    );
+    const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify`;
+    setDiscordLoginUrl(authUrl);
   }, []);
 
   const [schoolsData] = useState<School[]>([

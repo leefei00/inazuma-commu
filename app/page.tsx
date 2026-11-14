@@ -403,7 +403,7 @@ export default function Home() {
   }, []);
 
   const currentUser = {
-    role: "MEMBER", // กำหนดสิทธิ์ผู้ใช้ทั่วไป
+    role: "MEMBER",
     school: user?.school || "",
   };
 
@@ -718,7 +718,7 @@ export default function Home() {
     alert("บันทึกข้อมูลตัวละครลงเว็บไซต์เรียบร้อย");
   };
 
-  // กรองตัวละครเฉพาะโรงเรียนที่ตรงกับผู้ใช้ (ยกเว้นกรณีเป็น STAFF สามารถดูได้ทั้งหมด)
+  // กรองตัวละครเฉพาะโรงเรียนที่ตรงกับผู้ใช้
   const filteredChars = characters.filter(c => {
     if (currentUser.role !== "STAFF" && currentUser.school) {
       if (normalizeSchool(c.school) !== normalizeSchool(currentUser.school)) {

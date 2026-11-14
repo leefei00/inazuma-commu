@@ -1,73 +1,44 @@
+const { REST, Routes } = require('discord.js');
+const fs = require('node:fs');
+const path = require('node:path');
 require('dotenv').config();
-const { REST, Routes, SlashCommandBuilder } = require('discord.js');
 
-const commands = [
-  new SlashCommandBuilder()
-    .setName('add-player')
-    .setDescription('เพิ่มข้อมูลตัวละครใหม่เข้าสู่ Inazuma Commu Database')
-    .addStringOption(option => 
-      option.setName('name-surname')
-        .setDescription('ชื่อ-นามสกุลตัวละคร')
-        .setRequired(true))
-    .addStringOption(option => 
-      option.setName('year')
-        .setDescription('ปีการศึกษา')
-        .setRequired(true))
-    .addStringOption(option => 
-      option.setName('school')
-        .setDescription('ชื่อโรงเรียน / สังกัด')
-        .setRequired(true))
-    .addStringOption(option => 
-      option.setName('position')
-        .setDescription('ตำแหน่ง (เช่น FW, MF, DF, GK, MANAGER)')
-        .setRequired(true))
-    .addStringOption(option => 
-      option.setName('element')
-        .setDescription('ธาตุ (เช่น FIRE, WIND, WOOD, EARTH)')
-        .setRequired(true))
-    .addIntegerOption(option => 
-      option.setName('shoot')
-        .setDescription('ค่าพลัง Shoot')
-        .setRequired(true))
-    .addIntegerOption(option => 
-      option.setName('control')
-        .setDescription('ค่าพลัง Control')
-        .setRequired(true))
-    .addIntegerOption(option => 
-      option.setName('speed')
-        .setDescription('ค่าพลัง Speed')
-        .setRequired(true))
-    .addIntegerOption(option => 
-      option.setName('defence')
-        .setDescription('ค่าพลัง Defence')
-        .setRequired(true))
-    .addIntegerOption(option => 
-      option.setName('power')
-        .setDescription('ค่าพลัง Power')
-        .setRequired(true))
-    .addIntegerOption(option => 
-      option.setName('catch')
-        .setDescription('ค่าพลัง Catch')
-        .setRequired(true))
-    .addAttachmentOption(option => 
-      option.setName('image')
-        .setDescription('อัปโหลดรูปภาพตัวละคร')
-        .setRequired(true)),
-].map(command => command.toJSON());
+const commands = [];
+const foldersPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(foldersPath).filter(file => file.endsWith('.cjs') || file.endsWith('.js'));
 
-const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN);
+for (const file of commandFiles) {
+    const filePath = path.join(foldersPath, file);
+    const command = require(filePath);
+    if ('data' in command && 'execute' in command) {
+        commands.push(command.data.toJSON());
+    } else {
+        console.log(`[WARNING] ไฟล์คำสั่งที่ ${filePath} ขาดคุณสมบัติ 'data' หรือ 'execute'`);
+    }
+}
+
+const token = process.env.DISCORD_TOKEN || process.env.TOKEN || process.env.BOT_TOKEN || process.env.BOT_KEY || process.env.DISCORD_BOT_TOKEN;
+const clientId = process.env.CLIENT_ID;
+
+if (!token || !clientId) {
+    console.error('❌ กรุณาตรวจสอบ CLIENT_ID และ Token ในไฟล์ .env ให้ถูกต้อง');
+    process.exit(1);
+}
+
+const rest = new REST().setToken(token);
 
 (async () => {
-  try {
-    console.log('กำลังเริ่มต้นรีเฟรช Slash Commands...');
+    try {
+        console.log(`🔄 กำลังรีเฟรชคำสั่ง (${commands.length} คำสั่ง)...`);
 
-    await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
-      { body: commands },
-    );
+        const data = await rest.put(
+            Routes.applicationCommands(clientId),
+            { body: commands },
+        );
 
-    console.log('✅ ลงทะเบียนคำสั่งสำเร็จเรียบร้อยแล้ว!');
-  } catch (error) {
-    console.error('เกิดข้อผิดพลาด:', error);
-  }
+        console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+        console.log('🎉 ลงทะเบียนคำสั่งสำเร็จเรียบร้อยแล้ว!');
+    } catch (error) {
+        console.error('❌ เกิดข้อผิดพลาด:', error);
+    }
 })();

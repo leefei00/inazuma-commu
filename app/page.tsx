@@ -389,6 +389,9 @@ export default function Home() {
     school: "Zakkaze",
   });
 
+  // ลิงก์สำหรับ Discord OAuth2 Login URL
+  const discordLoginUrl = `https://discord.com/api/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '154643511134244605'}&redirect_uri=${encodeURIComponent(process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI || 'http://localhost:3000/api/auth/discord/callback')}&response_type=code&scope=identify`;
+
   const [schoolsData] = useState<School[]>([
     {
       name: "ZAKKAZE GAKUEN",
@@ -784,10 +787,13 @@ export default function Home() {
             INAZUMA ELEVEN NEW FRONTIER COMMUNITY PORTAL
           </div>
           <div className="flex items-center gap-2">
-            <span className="bg-[#5865F2] text-white px-2 py-0.5 text-[10px] font-bold border border-blue-700 rounded-none">
-              DISCORD AUTH: @{currentUser.role}
-            </span>
-            <span className="text-[9px] text-slate-400">*ระบบซ่อนข้อมูลทีมอัตโนมัติ</span>
+            {/* ปุ่มเข้าสู่ระบบด้วย Discord แบบพร้อมใช้งาน */}
+            <a
+              href={discordLoginUrl}
+              className="bg-[#5865F2] hover:bg-[#4752C4] text-white px-2.5 py-1 text-[10px] font-bold rounded-none flex items-center gap-1 transition shadow-2xs"
+            >
+              LOGIN DISCORD
+            </a>
           </div>
         </div>
 

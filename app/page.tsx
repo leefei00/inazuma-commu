@@ -413,8 +413,16 @@ export default function Home() {
     setFlippedCards(prev => ({ ...prev, [charId]: !prev[charId] }));
   };
 
-  // ลิงก์สำหรับ Discord OAuth2 Login URL
-  const discordLoginUrl = `https://discord.com/api/oauth2/authorize?client_id=${process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '154643511134244605'}&redirect_uri=${encodeURIComponent(process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI || 'http://localhost:3000/api/auth/discord/callback')}&response_type=code&scope=identify`;
+  // สร้างลิงก์ Discord OAuth2 แบบ Dynamic (รองรับทั้ง Localhost และ Vercel อัตโนมัติ)
+  const [discordLoginUrl, setDiscordLoginUrl] = useState<string>("#");
+
+  useEffect(() => {
+    const clientId = process.env.NEXT_PUBLIC_DISCORD_CLIENT_ID || '154643511134244605';
+    const redirectUri = `${window.location.origin}/api/auth/discord/callback`;
+    setDiscordLoginUrl(
+      `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify`
+    );
+  }, []);
 
   const [schoolsData] = useState<School[]>([
     {

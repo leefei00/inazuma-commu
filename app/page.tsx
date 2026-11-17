@@ -417,7 +417,7 @@ export default function Home() {
   const [discordLoginUrl, setDiscordLoginUrl] = useState<string>("#");
 
   useEffect(() => {
-    const clientId = '154643511134244605';
+    const clientId = '1546435111342444605';
     const redirectUri = `${window.location.origin}/api/auth/discord/callback`;
     const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=code&scope=identify`;
     setDiscordLoginUrl(authUrl);

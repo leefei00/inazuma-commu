@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 1. กำหนด Redirect URI ให้ฉลาดและแม่นยำ (รองรับทั้ง Vercel และ Localhost)
+    // 1. กำหนด Redirect URI ให้รองรับทั้ง Vercel และ Localhost อัตโนมัติ
     const redirectUri = process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI || 
       (process.env.NODE_ENV === 'production' 
         ? 'https://inazuma-commu.vercel.app/api/auth/discord/callback' 
@@ -38,7 +38,6 @@ export async function GET(request: Request) {
 
     const tokenData = await tokenResponse.json();
     
-    // ตรวจสอบว่าได้ access_token มาจริงไหม ถ้าไม่ได้ให้พ่น Error ออกมาดู
     if (!tokenData.access_token) {
       console.error('❌ Discord Token Response Error:', tokenData);
       throw new Error('Failed to get access token from Discord');
@@ -51,36 +50,56 @@ export async function GET(request: Request) {
     const discordUser = await userResponse.json();
 
     console.log("📌 Discord User ID ที่ล็อกอินเข้ามา:", discordUser.id);
+    console.log("📌 Discord Username:", discordUser.username);
 
-    // 4. ตรวจสอบข้อมูลในตาราง community_users ของ Supabase
+    // 4. ตรวจสอบข้อมูลในตาราง community_users ของ Supabase (แปลงเป็น String เพื่อความชัวร์)
     const { data: communityUser, error } = await supabase
       .from('community_users')
       .select('*')
-      .eq('discord_id', discordUser.id)
+      .eq('discord_id', String(discordUser.id))
       .maybeSingle();
 
     console.log("📌 ผลลัพธ์จาก Supabase:", communityUser);
     console.log("📌 Error จาก Supabase (ถ้ามี):", error);
 
-    if (error || !communityUser) {
-      console.log("❌ ไม่พบข้อมูลในระบบ หรือเกิดข้อผิดพลาด พาไปหน้า not-registered");
-      return NextResponse.redirect(new URL('/not-registered', request.url));
+    // ถ้ายังไม่มีข้อมูลในตาราง community_users ให้สร้างข้อมูลเริ่มต้นให้ทันที (ป้องกันการเด้งหลุด)
+    let userData = communityUser;
+    if (!userData) {
+      console.log("⚠️ ไม่พบผู้ใช้ในระบบ กำลังสร้างข้อมูลเริ่มต้นสำหรับ:", discordUser.username);
+      const { data: newUser, insertError } = await supabase
+        .from('community_users')
+        .insert([
+          {
+            discord_id: String(discordUser.id),
+            username: discordUser.username || 'Unknown',
+            school: 'Zakkaze', // ค่าเริ่มต้น
+            role: 'MEMBER'
+          }
+        ])
+        .select()
+        .single();
+
+      if (insertError) {
+        console.error('❌ Insert User Error:', insertError);
+        return NextResponse.redirect(new URL('/?error=db_insert_failed', request.url));
+      }
+      userData = newUser;
     }
 
-    // 5. บันทึกข้อมูลเซสชันลง Cookie
+    // 5. บันทึกข้อมูลเซสชันลง Cookie (อายุ 7 วัน)
     const cookieStore = await cookies();
     cookieStore.set('user_session', JSON.stringify({
-      discord_id: communityUser.discord_id,
-      username: communityUser.username,
-      school: communityUser.school
+      discord_id: userData.discord_id,
+      username: userData.username,
+      school: userData.school || 'Zakkaze'
     }), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 7, // 7 วัน
+      maxAge: 60 * 60 * 24 * 7,
       path: '/'
     });
 
-    // 6. ล็อกอินสำเร็จ พาเข้าสู่หน้าแรก
+    // 6. ล็อกอินสำเร็จ พาเข้าสู่หน้าแรกของเว็บโดยสมบูรณ์
     return NextResponse.redirect(new URL('/', request.url));
 
   } catch (error) {

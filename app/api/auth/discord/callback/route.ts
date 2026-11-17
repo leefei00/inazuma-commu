@@ -17,7 +17,13 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 1. นำ code ไปแลก Access Token กับ Discord
+    // 1. กำหนด Redirect URI ให้ฉลาดและแม่นยำ (รองรับทั้ง Vercel และ Localhost)
+    const redirectUri = process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI || 
+      (process.env.NODE_ENV === 'production' 
+        ? 'https://inazuma-commu.vercel.app/api/auth/discord/callback' 
+        : 'http://localhost:3000/api/auth/discord/callback');
+
+    // 2. นำ code ไปแลก Access Token กับ Discord
     const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -26,16 +32,19 @@ export async function GET(request: Request) {
         client_secret: process.env.DISCORD_CLIENT_SECRET!,
         grant_type: 'authorization_code',
         code,
-        redirect_uri: process.env.NEXT_PUBLIC_DISCORD_REDIRECT_URI || 'http://localhost:3000/api/auth/discord/callback',
+        redirect_uri: redirectUri,
       }),
     });
 
     const tokenData = await tokenResponse.json();
+    
+    // ตรวจสอบว่าได้ access_token มาจริงไหม ถ้าไม่ได้ให้พ่น Error ออกมาดู
     if (!tokenData.access_token) {
+      console.error('❌ Discord Token Response Error:', tokenData);
       throw new Error('Failed to get access token from Discord');
     }
 
-    // 2. ดึงข้อมูลโปรไฟล์ผู้ใช้จาก Discord
+    // 3. ดึงข้อมูลโปรไฟล์ผู้ใช้จาก Discord
     const userResponse = await fetch('https://discord.com/api/users/@me', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
@@ -43,7 +52,7 @@ export async function GET(request: Request) {
 
     console.log("📌 Discord User ID ที่ล็อกอินเข้ามา:", discordUser.id);
 
-    // 3. ตรวจสอบข้อมูลในตาราง community_users ของ Supabase
+    // 4. ตรวจสอบข้อมูลในตาราง community_users ของ Supabase
     const { data: communityUser, error } = await supabase
       .from('community_users')
       .select('*')
@@ -58,7 +67,7 @@ export async function GET(request: Request) {
       return NextResponse.redirect(new URL('/not-registered', request.url));
     }
 
-    // 4. บันทึกข้อมูลเซสชันลง Cookie
+    // 5. บันทึกข้อมูลเซสชันลง Cookie
     const cookieStore = await cookies();
     cookieStore.set('user_session', JSON.stringify({
       discord_id: communityUser.discord_id,
@@ -71,7 +80,7 @@ export async function GET(request: Request) {
       path: '/'
     });
 
-    // 5. ล็อกอินสำเร็จ พาเข้าสู่หน้าแรก
+    // 6. ล็อกอินสำเร็จ พาเข้าสู่หน้าแรก
     return NextResponse.redirect(new URL('/', request.url));
 
   } catch (error) {

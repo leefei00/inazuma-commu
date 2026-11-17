@@ -52,7 +52,7 @@ export async function GET(request: Request) {
     console.log("📌 Discord User ID ที่ล็อกอินเข้ามา:", discordUser.id);
     console.log("📌 Discord Username:", discordUser.username);
 
-    // 4. ตรวจสอบข้อมูลในตาราง community_users ของ Supabase (แปลงเป็น String เพื่อความชัวร์)
+    // 4. ตรวจสอบข้อมูลในตาราง community_users ของ Supabase
     const { data: communityUser, error } = await supabase
       .from('community_users')
       .select('*')
@@ -62,17 +62,19 @@ export async function GET(request: Request) {
     console.log("📌 ผลลัพธ์จาก Supabase:", communityUser);
     console.log("📌 Error จาก Supabase (ถ้ามี):", error);
 
-    // ถ้ายังไม่มีข้อมูลในตาราง community_users ให้สร้างข้อมูลเริ่มต้นให้ทันที (ป้องกันการเด้งหลุด)
+    // ถ้ายังไม่มีข้อมูลในตาราง ให้สร้างข้อมูลเริ่มต้นใหม่ทันที
     let userData = communityUser;
     if (!userData) {
       console.log("⚠️ ไม่พบผู้ใช้ในระบบ กำลังสร้างข้อมูลเริ่มต้นสำหรับ:", discordUser.username);
-      const { data: newUser, insertError } = await supabase
+      
+      // เปลี่ยนวิธี destructure ให้ถูกต้องตาม Type ของ Supabase
+      const { data: newUser, error: insertError } = await supabase
         .from('community_users')
         .insert([
           {
             discord_id: String(discordUser.id),
             username: discordUser.username || 'Unknown',
-            school: 'Zakkaze', // ค่าเริ่มต้น
+            school: 'Zakkaze',
             role: 'MEMBER'
           }
         ])
@@ -99,7 +101,7 @@ export async function GET(request: Request) {
       path: '/'
     });
 
-    // 6. ล็อกอินสำเร็จ พาเข้าสู่หน้าแรกของเว็บโดยสมบูรณ์
+    // 6. ล็อกอินสำเร็จ พาเข้าสู่หน้าแรก
     return NextResponse.redirect(new URL('/', request.url));
 
   } catch (error) {
